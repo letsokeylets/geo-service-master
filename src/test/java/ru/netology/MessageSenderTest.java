@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import ru.netology.entity.Country;
 import ru.netology.entity.Location;
+import ru.netology.geo.GeoService;
 import ru.netology.geo.GeoServiceImpl;
+import ru.netology.i18n.LocalizationService;
 import ru.netology.i18n.LocalizationServiceImpl;
 import ru.netology.sender.MessageSenderImpl;
 
@@ -26,11 +28,11 @@ public class MessageSenderTest {
         final String ip = "172.";
 
         headers.put(MessageSenderImpl.IP_ADDRESS_HEADER, ip);
-        LocalizationServiceImpl localizationService = Mockito.mock(LocalizationServiceImpl.class);
+        LocalizationService localizationService = Mockito.mock(LocalizationService.class);
         Mockito.when(localizationService.locale(Country.RUSSIA))
                 .thenReturn("Добро пожаловать");
 
-        GeoServiceImpl geoService = Mockito.mock(GeoServiceImpl.class);
+        GeoService geoService = Mockito.mock(GeoService.class);
         Mockito.when(geoService.byIp(ip))
                 .thenReturn(new Location("Moscow", Country.RUSSIA, null, 0));
 
@@ -41,21 +43,25 @@ public class MessageSenderTest {
     }
 
     @Test
-    void testUSATextSend() {
+    void testByIpUsed() {
         final String ip = "96.";
 
         headers.put(MessageSenderImpl.IP_ADDRESS_HEADER, ip);
-        LocalizationServiceImpl localizationService = Mockito.mock(LocalizationServiceImpl.class);
+        LocalizationService localizationService = Mockito.mock(LocalizationService.class);
         Mockito.when(localizationService.locale(Country.USA))
                 .thenReturn("Welcome");
 
-        GeoServiceImpl geoService = Mockito.mock(GeoServiceImpl.class);
+        GeoService geoService = Mockito.mock(GeoService.class);
         Mockito.when(geoService.byIp(ip))
-                .thenReturn(new Location("New York", Country.USA, null,  0));
+                .thenReturn(new Location(null, Country.USA, null, 0));
 
         MessageSenderImpl messageSender = new MessageSenderImpl(geoService, localizationService);
-        String preferences = messageSender.send(headers);
-        String expected = "Welcome";
-        Assertions.assertEquals(expected, preferences);
+        messageSender.send(headers);
+
+        //Проверяем, что метод byIp не вызывается, если айпи пуст
+        Mockito.verify(geoService, Mockito.times(0)).byIp("");
+        //В случае стандартного айпи - вызывается 1 раз
+        Mockito.verify(geoService, Mockito.times(1)).byIp(ip);
     }
+
 }

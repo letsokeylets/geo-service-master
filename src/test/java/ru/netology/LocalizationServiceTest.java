@@ -12,18 +12,15 @@ public class LocalizationServiceTest {
 
     @Test
     void localeTest() {
-        final String ip = "96.124.432.21";
-        final String message = "Welcome";
-
-        GeoServiceImpl geoService = Mockito.mock(GeoServiceImpl.class);
-        //Делаем заглушку на гео сервис, что при получение IP, вернётся локация США
-        Mockito.when(geoService.byIp(ip))
-                .thenReturn(new Location("New York", Country.USA, null,  0));
+        String expectedRUS = "Добро пожаловать";
+        String expectedUSA = "Welcome";
 
         LocalizationServiceImpl localizationService = new LocalizationServiceImpl();
-        //Получаем страну из заглушки
-        Country country = geoService.byIp(ip).getCountry();
-        //Проверяем, что по стране USA получаем Welcome
-        Assertions.assertEquals(localizationService.locale(country), message);
+        String actualRUS = localizationService.locale(Country.RUSSIA);
+        String actualUSA = localizationService.locale(Country.USA);
+
+        Assertions.assertEquals(expectedRUS, actualRUS);
+        Assertions.assertEquals(expectedUSA, actualUSA);
+        Assertions.assertNotEquals(expectedUSA, actualRUS);
     }
 }
